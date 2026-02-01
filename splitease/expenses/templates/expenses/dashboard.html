@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold">🚢 {{ trip.name }}</h2>
+    <a href="{% url 'add_expense' trip.id %}" class="btn btn-primary shadow-sm">+ Add Expense</a>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <h5 class="fw-bold mb-3">📜 Recent Expenses</h5>
+        <div class="card p-3 border-0 shadow-sm">
+            {% for exp in trip.expenses.all %}
+            <div class="d-flex justify-content-between align-items-center py-3 border-bottom">
+                <div>
+                    <p class="fw-bold mb-0">{{ exp.description }}</p>
+                    <small class="text-muted">Paid by <strong class="text-white"></strong>{{ exp.paid_by.username }}</small>
+                </div>
+                <span class="badge bg-primary bg-opacity-10 text-primary p-2">₹{{ exp.amount }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="col-md-6">
+        <h5 class="fw-bold mb-3">🤝 Settlements</h5>
+        <div class="card p-3 border-0 shadow-sm">
+            {% for d in debts %}
+            <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded-3 mb-2">
+                <p class="mb-0"><strong>{{ d.from_user.username }}</strong> owes <strong>₹{{ d.amount }}</strong></p>
+                {% if request.user == d.to_user %}
+                <form action="{% url 'settle_debt' d.id %}" method="POST">
+                    {% csrf_token %}
+                    <button class="btn btn-sm btn-success rounded-pill">Settle</button>
+                </form>
+                {% endif %}
+            </div>
+            {% empty %}
+            <p class="text-center text-muted py-4">No debts yet!</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
