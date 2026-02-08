@@ -2,39 +2,84 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2 class="fw-bold">🚢 {{ trip.name }}</h2>
-    <a href="{% url 'add_expense' trip.id %}" class="btn btn-primary shadow-sm">+ Add Expense</a>
+    <div class="d-flex gap-2">
+        <a href="{% url 'add_expense' trip.id %}" class="btn btn-primary">+ Add Expense</a>
+        {% if trip.created_by == request.user or not trip.created_by %}
+        <form method="post" action="{% url 'delete_trip' trip.id %}" onsubmit="return confirm('Are you sure you want to delete this trip?');" class="mb-0">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">Delete Trip</button>
+        </form>
+        {% endif %}
+    </div>
 </div>
 
-<div class="row">
+<div class="row g-4">
     <div class="col-md-6">
-        <h5 class="fw-bold mb-3">📜 Recent Expenses</h5>
-        <div class="card p-3 border-0 shadow-sm">
+        <h5 class="fw-bold mb-3 ">📜 Recent Expenses</h5>
+        <div class="card p-3">
             {% for exp in trip.expenses.all %}
-            <div class="d-flex justify-content-between align-items-center py-3 border-bottom">
+            {% if exp.description != "Aagra" %}
+            <div class="d-flex justify-content-between align-items-center py-3 border-bottom border-secondary border-opacity-25">
                 <div>
                     <p class="fw-bold mb-0">{{ exp.description }}</p>
-                    <small class="text-muted">Paid by <strong class="text-white"></strong>{{ exp.paid_by.username }}</small>
+                    <small class="text-white">Paid by <strong class="text-white">{{ exp.paid_by.first_name|default:exp.paid_by.username }}</strong></small>
                 </div>
                 <span class="badge bg-primary bg-opacity-10 text-primary p-2">₹{{ exp.amount }}</span>
             </div>
+            {% endif %}
             {% endfor %}
         </div>
     </div>
     <div class="col-md-6">
-        <h5 class="fw-bold mb-3">🤝 Settlements</h5>
-        <div class="card p-3 border-0 shadow-sm">
-            {% for d in debts %}
-            <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded-3 mb-2">
-                <p class="mb-0"><strong>{{ d.from_user.username }}</strong> owes <strong>₹{{ d.amount }}</strong></p>
-                {% if request.user == d.to_user %}
-                <form action="{% url 'settle_debt' d.id %}" method="POST">
-                    {% csrf_token %}
-                    <button class="btn btn-sm btn-success rounded-pill">Settle</button>
-                </form>
-                {% endif %}
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold m-0">🤝 Settlements</h5>
+            <span class="badge bg-warning text-dark">
+                {{ remaining_to_pay }} remaining to pay
+            </span>
+        </div>
+        <div class="card p-3">
+            {% if simplified_debts %}
+            <div class="d-flex justify-content-between align-items-center mb-3 p-2 bg-success bg-opacity-25 rounded">
+                <small class="text-white">
+                    <strong>{{ remaining_to_pay }}</strong> of {{ total_members }} members still need to pay
+                </small>
+            </div>
+            {% endif %}
+            
+            {% for item in simplified_debts %}
+            <div class="debt-row d-flex justify-content-between align-items-center p-3 bg-dark bg-opacity-50 rounded-3 mb-2 border border-secondary border-opacity-10">
+                <div>
+                    {% if request.user == item.debtor %}
+                        <p class="mb-0 text-warning">You owe <strong>₹{{ item.amount|floatformat:2 }}</strong> to {{ item.creditor.first_name|default:item.creditor.username }}</p>
+                    {% elif request.user == item.creditor %}
+                        <p class="mb-0 text-info">{{ item.debtor.first_name|default:item.debtor.username }} owes you <strong>₹{{ item.amount|floatformat:2 }}</strong></p>
+                    {% else %}
+                        <p class="mb-0"><strong>{{ item.debtor.first_name|default:item.debtor.username }}</strong> owes <strong>₹{{ item.amount|floatformat:2 }}</strong> to {{ item.creditor.first_name|default:item.creditor.username }}</p>
+                    {% endif %}
+                </div>
+                <div class="d-flex gap-2">
+                    {% if request.user == item.creditor %}
+                        {% if item.whatsapp_number %}
+                        <a href="https://wa.me/{{ item.whatsapp_number|cut:'+' }}?text={{ item.message|urlencode }}" 
+                           target="_blank" 
+                           class="btn btn-sm btn-success rounded-pill"
+                           title="Send WhatsApp Reminder">
+                            📱 Set Reminder
+                        </a>
+                        {% else %}
+                        <button class="btn btn-sm btn-secondary rounded-pill" disabled title="No WhatsApp number available">
+                            📱 No WhatsApp
+                        </button>
+                        {% endif %}
+                        <form action="{% url 'settle_debt_simplified' trip.id item.debtor_id item.creditor_id %}" method="POST" class="mb-0">
+                            {% csrf_token %}
+                            <button class="btn btn-sm btn-primary rounded-pill">Confirm</button>
+                        </form>
+                    {% endif %}
+                </div>
             </div>
             {% empty %}
-            <p class="text-center text-muted py-4">No debts yet!</p>
+            <p class="text-center py-4">🎉 All settled up! No pending payments.</p>
             {% endfor %}
         </div>
     </div>

@@ -1,71 +1,64 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="container py-5">
-    <div class="mb-4">
-        <a href="{% url 'home' %}" class="text-decoration-none text-muted fw-bold">
-            <i class="bi bi-arrow-left"></i> ← Back to Dashboard
-        </a>
-    </div>
-
-    <div class="card shadow-lg mx-auto p-5 border-0" style="max-width: 550px; border-radius: 24px;">
+<div class="container py-4">
+    <div class="card shadow-lg mx-auto p-5 border-0" style="max-width: 550px;">
         <div class="text-center mb-4">
-            <div class="bg-primary bg-opacity-10 p-3 d-inline-block rounded-circle mb-3">
-                <span class="fs-1">🚢</span>
-            </div>
             <h2 class="fw-bold">Start a New Trip</h2>
-            <p class="text-muted">Create a group and invite your friends to split costs.</p>
+            <p class="text-white">Create a group and invite your friends.</p>
         </div>
-
+        
         <form method="POST">
             {% csrf_token %}
-            
-            <div class="mb-3">
-                <label class="form-label small fw-bold text-uppercase text-secondary">Trip Name</label>
-                <input type="text" name="name" class="form-control form-control-lg border-2 shadow-none" 
-                       placeholder="e.g. Goa 2026, Weekend Trek" required>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label small fw-bold text-uppercase text-secondary">Description (Optional)</label>
-                <textarea name="description" class="form-control border-2 shadow-none" 
-                          rows="2" placeholder="What's this trip about?"></textarea>
-            </div>
-
             <div class="mb-4">
-                <label class="form-label small fw-bold text-uppercase text-secondary d-block">
-                    Add Members
-                </label>
-                <div class="p-3 bg-light rounded-3 border">
-                    <select name="members" class="form-select border-0 bg-transparent shadow-none" 
-                            multiple style="min-height: 150px;" required>
-                        {% for user in users %}
-                            <option value="{{ user.id }}" class="py-2 px-3 mb-1 rounded">
-                                {{ user.username }}
-                            </option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="form-text mt-2 text-muted">
-                    <i class="bi bi-info-circle"></i> 
-                    Hold <strong>Ctrl</strong> (or <strong>Cmd</strong> on Mac) to select multiple friends.
-                </div>
+                <label class="form-label small fw-bold text-uppercase ">Trip Name</label>
+                <input type="text" name="name" class="form-control" placeholder="e.g. Goa 2026" required>
             </div>
-
-            <button type="submit" class="btn btn-primary btn-lg w-100 shadow py-3 fw-bold">
-                Create Trip & Continue
-            </button>
+            <div class="mb-4">
+                <label class="form-label small fw-bold text-uppercase text-white ">Description (Optional)</label>
+                <textarea name="description" class="form-control" rows="2" placeholder="What is this trip about?"></textarea>
+            </div>
+            
+            <div class="mb-4">
+                <label class="form-label small fw-bold text-uppercase ">Add Members</label>
+                <div id="member-fields">
+                    <div class="member-row mb-2">
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <input type="text" name="member_names[]" class="form-control" placeholder="Name (e.g. John)" required>
+                            </div>
+                            <div class="col-6">
+                                <input type="tel" name="member_whatsapp[]" class="form-control" placeholder="WhatsApp (+91...)" required>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-outline-primary btn-sm mt-2" onclick="addMemberField()">+ Add Another Member</button>
+            </div>
+            <div class="form-text mt-0 pt-0 pd-2 text-white opacity-75 mb-4">
+                <i class="bi bi-info-circle"></i> 
+                <span>Enter any name and WhatsApp number. If the name matches a registered username, they will be linked to their account. Otherwise, they will be added as a guest member. You will be automatically added as the trip creator.</span>
+            </div>
+            
+            <script>
+                function addMemberField() {
+                    const container = document.getElementById('member-fields');
+                    const newRow = document.createElement('div');
+                    newRow.className = 'member-row mb-2';
+                    newRow.innerHTML = `
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <input type="text" name="member_names[]" class="form-control" placeholder="Name" required>
+                            </div>
+                            <div class="col-6">
+                                <input type="tel" name="member_whatsapp[]" class="form-control" placeholder="WhatsApp (+91...)" required>
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(newRow);
+                }
+            </script>
+            <button type="submit" class="btn btn-primary w-100 py-3">Create Trip</button>
         </form>
     </div>
 </div>
-
-<style>
-    select[multiple]:focus option:checked {
-        background: var(--primary) linear-gradient(0deg, var(--primary) 0%, var(--primary) 100%);
-        color: white;
-    }
-    .form-control-lg:focus {
-        border-color: var(--primary);
-        background-color: #fff;
-    }
-</style>
 {% endblock %}

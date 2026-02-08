@@ -16,8 +16,12 @@ urlpatterns = [
     # 3. Trip Management
     path('create/', views.create_trip, name='create_trip'),
     path('trip/<int:trip_id>/', views.trip_dashboard, name='trip_dashboard'),
+    path('trip/delete/<int:trip_id>/', views.delete_trip, name='delete_trip'),
 
     # 4. Expense & Settlement Logic
     path('trip/<int:trip_id>/add/', views.add_expense, name='add_expense'),
     path('settle/<int:debt_id>/', views.settle_debt, name='settle_debt'),
+    path('trip/<int:trip_id>/settle/<int:debtor_id>/<int:creditor_id>/', views.settle_debt_simplified, name='settle_debt_simplified'),
+
+    path('expense/delete/<int:expense_id>/', views.delete_expense, name='delete_expense'),
 ]
